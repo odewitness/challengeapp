@@ -1,9 +1,11 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import { useChallengeData } from './hooks/useChallengeData'
+import { useChallenges } from './hooks/useChallenges'
 import { useDailyReminder } from './hooks/useDailyReminder'
 import NavBar from './components/NavBar'
-import Dashboard from './pages/Dashboard'
+import Today from './pages/Today'
+import Challenges from './pages/Challenges'
+import ChallengePlanning from './pages/ChallengePlanning'
 import Session from './pages/Session'
 import CalendarPage from './pages/Calendar'
 import StatsPage from './pages/Stats'
@@ -27,7 +29,7 @@ export default function App() {
 }
 
 function AuthedApp({ auth }) {
-  const data = useChallengeData(auth.user.id)
+  const data = useChallenges(auth.user.id)
 
   return (
     <div className="app-shell">
@@ -41,7 +43,9 @@ function AuthedApp({ auth }) {
       </div>
 
       <Routes>
-        <Route path="/" element={<Dashboard data={data} />} />
+        <Route path="/" element={<Today data={data} />} />
+        <Route path="/challenges" element={<Challenges data={data} />} />
+        <Route path="/challenges/:challengeId" element={<ChallengePlanning data={data} />} />
         <Route path="/session/:exerciseId" element={<Session data={data} />} />
         <Route path="/calendar" element={<CalendarPage data={data} />} />
         <Route path="/stats" element={<StatsPage data={data} />} />

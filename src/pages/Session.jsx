@@ -3,10 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 export default function Session({ data }) {
   const { exerciseId } = useParams()
   const navigate = useNavigate()
-  const { exercises, completedIds, favoriteIds, toggleComplete, toggleFavorite } = data
+  const { findExercise, findChallenge, completedIds, favoriteIds, toggleComplete, toggleFavorite } =
+    data
 
-  const ex = exercises.find((e) => e.id === exerciseId)
+  const ex = findExercise(exerciseId)
   if (!ex) return <div className="page">Séance introuvable.</div>
+
+  const challenge = findChallenge(ex.challenge_id)
 
   const done = completedIds.has(ex.id)
   const fav = favoriteIds.has(ex.id)
@@ -33,7 +36,7 @@ export default function Session({ data }) {
 
       <div className="session-meta">
         <span className="eyebrow">
-          Semaine {ex.semaine} · Jour {ex.jour}
+          {challenge?.nom ?? ''} · Semaine {ex.semaine} · Jour {ex.jour}
         </span>
         <h1 style={{ fontSize: 22, marginTop: 4 }}>{ex.titre}</h1>
 

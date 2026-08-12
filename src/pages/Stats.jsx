@@ -3,7 +3,7 @@ import BreathRing from '../components/BreathRing'
 import StreakBadge from '../components/StreakBadge'
 
 export default function StatsPage({ data }) {
-  const { exercises, completedIds, stats, streak } = data
+  const { exercises, completedIds, globalStats: stats, streak } = data
 
   const byCategory = useMemo(() => {
     const map = new Map()

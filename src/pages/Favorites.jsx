@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
 export default function FavoritesPage({ data }) {
-  const { exercises, favoriteIds, completedIds } = data
+  const { exercises, favoriteIds, completedIds, findChallenge } = data
   const favs = exercises.filter((e) => favoriteIds.has(e.id))
 
   return (
@@ -24,7 +24,7 @@ export default function FavoritesPage({ data }) {
               <Link to={`/session/${ex.id}`} className="card fav-row">
                 <div>
                   <span className="eyebrow">
-                    S{ex.semaine} · J{ex.jour}
+                    {findChallenge(ex.challenge_id)?.nom ?? ''} · S{ex.semaine} · J{ex.jour}
                   </span>
                   <p style={{ fontWeight: 600, fontSize: 15 }}>{ex.titre}</p>
                 </div>

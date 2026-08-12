@@ -34,14 +34,21 @@ create table if not exists favorites (
   primary key (user_id, exercise_id)
 );
 
+create table if not exists active_challenges (
+  user_id uuid references auth.users(id) on delete cascade,
+  challenge_id text references challenges(id) on delete cascade,
+  primary key (user_id, challenge_id)
+);
+
 -- Row Level Security : chacun ne voit/modifie que ses propres données de
--- progression et de favoris. Le contenu du challenge (challenges/exercises)
--- est lisible par tout utilisateur connecté.
+-- progression, favoris et challenges suivis. Le contenu du challenge
+-- (challenges/exercises) est lisible par tout utilisateur connecté.
 
 alter table challenges enable row level security;
 alter table exercises enable row level security;
 alter table progress enable row level security;
 alter table favorites enable row level security;
+alter table active_challenges enable row level security;
 
 create policy "Lecture challenges pour tous les connectés"
   on challenges for select
@@ -58,5 +65,10 @@ create policy "Chacun gère sa propre progression"
 
 create policy "Chacun gère ses propres favoris"
   on favorites for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Chacun gère ses propres challenges suivis"
+  on active_challenges for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
