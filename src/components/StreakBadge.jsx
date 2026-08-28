@@ -1,13 +1,9 @@
 export default function StreakBadge({ streak }) {
   if (streak <= 0) {
-    return (
-      <div className="tag" style={{ background: 'var(--color-line)', color: 'var(--color-ink-soft)' }}>
-        Pas encore de série
-      </div>
-    )
+    return <div className="tag tag-muted">Pas encore de série</div>
   }
   return (
-    <div className="tag" style={{ background: '#FBEFDA', color: 'var(--color-accent-gold)' }}>
+    <div className="tag tag-streak">
       <FlameIcon /> {streak} {streak > 1 ? 'jours de suite' : 'jour de suite'}
     </div>
   )

@@ -73,7 +73,6 @@ export default function ChallengePlanning({ data }) {
       ))}
 
       <style>{`
-        .back-btn { border: none; background: none; padding: 4px 0 14px; font-weight: 600; color: var(--color-primary-dark); font-size: 14px; }
         .dash-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
         .week-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; }
         .week-tab {

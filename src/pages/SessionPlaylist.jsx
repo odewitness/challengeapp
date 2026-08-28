@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useToast } from '../components/toastContext'
 
 // Charge (une seule fois) le script de l'API IFrame YouTube et signale quand
 // window.YT.Player est disponible.
@@ -30,6 +31,7 @@ function useYouTubeApi() {
 export default function SessionPlaylist({ data }) {
   const { challengeId, semaine, jour } = useParams()
   const navigate = useNavigate()
+  const showToast = useToast()
   const { findChallenge, getChallengeWeeks, completedIds, toggleComplete, loading } = data
 
   const apiReady = useYouTubeApi()
@@ -84,6 +86,7 @@ export default function SessionPlaylist({ data }) {
     if (!apiReady || !mountRef.current || !firstVideoId) return
     const player = new window.YT.Player(mountRef.current, {
       videoId: firstVideoId,
+      host: 'https://www.youtube-nocookie.com',
       playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
       events: {
         onReady: (e) => e.target.playVideo(),
@@ -108,6 +111,22 @@ export default function SessionPlaylist({ data }) {
   if (!exercises.length) return <div className="page">Aucune séance pour ce jour.</div>
 
   const current = exercises[index]
+  const remaining = exercises.filter((e) => !completedIds.has(e.id))
+
+  const markCurrentDone = () => {
+    if (current && !completedIds.has(current.id)) {
+      toggleComplete(current.id, true)
+      showToast('Séance validée', {
+        actionLabel: 'Annuler',
+        onAction: () => toggleComplete(current.id, false),
+      })
+    }
+  }
+
+  const markAllDone = () => {
+    remaining.forEach((e) => toggleComplete(e.id, true))
+    showToast(`${remaining.length} séance${remaining.length > 1 ? 's' : ''} validée${remaining.length > 1 ? 's' : ''}`)
+  }
 
   return (
     <div className="page playlist-page">
@@ -132,6 +151,19 @@ export default function SessionPlaylist({ data }) {
         </p>
       </div>
 
+      {remaining.length > 0 && (
+        <div className="playlist-actions">
+          {!finished && current && !completedIds.has(current.id) && (
+            <button className="btn btn-ghost" onClick={markCurrentDone}>
+              Marquer cette séance comme faite
+            </button>
+          )}
+          <button className="btn btn-ghost" onClick={markAllDone}>
+            Tout marquer comme fait
+          </button>
+        </div>
+      )}
+
       <ol className="playlist-list">
         {exercises.map((ex, i) => {
           const done = completedIds.has(ex.id)
@@ -154,12 +186,10 @@ export default function SessionPlaylist({ data }) {
       </ol>
 
       <style>{`
-        .back-btn { border: none; background: none; padding: 4px 0 14px; font-weight: 600; color: var(--color-primary-dark); font-size: 14px; }
-        .video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius-m); overflow: hidden; background: #000; }
-        .video-wrap > div { position: absolute; inset: 0; }
-        .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
         .session-meta { margin-top: 18px; }
         .playlist-progress { margin-top: 6px; font-family: var(--font-mono); font-size: 12px; color: var(--color-ink-faint); }
+        .playlist-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .playlist-actions .btn { font-size: 13px; padding: 9px 14px; }
         .playlist-list { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
         .playlist-row {
           display: flex; align-items: center; gap: 10px; width: 100%;

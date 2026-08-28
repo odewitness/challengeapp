@@ -57,7 +57,9 @@ Pour activer la vraie synchro (compte, multi-device), passe à l'étape 4.
 3. Fais pareil avec `supabase/seed.sql` pour importer tes 14 séances
    déjà remplies dans le Google Sheet
 4. Va dans **Authentication → Providers**, vérifie qu'**Email** est activé
-   (c'est le cas par défaut)
+   (c'est le cas par défaut). Pour la connexion par lien magique et la
+   réinitialisation de mot de passe, ajoute l'URL du site (locale et Netlify)
+   dans **Authentication → URL Configuration → Redirect URLs**.
 5. Va dans **Project Settings → API**, récupère :
    - `Project URL` → ce sera `VITE_SUPABASE_URL`
    - `anon public key` → ce sera `VITE_SUPABASE_ANON_KEY`
@@ -104,13 +106,17 @@ src/
   lib/
     supabaseClient.js   → client Supabase (null si non configuré)
     dataService.js       → lecture/écriture (Supabase ou localStorage)
-    streak.js            → calcul de la série de jours consécutifs
+    streak.js            → série en cours + meilleure série
+    dateKey.js           → clé de date basée sur l'heure locale (pas UTC)
   hooks/
-    useAuth.js
-    useChallengeData.js  → toute la logique de données du challenge
+    useAuth.js           → connexion mot de passe / lien magique / reset
+    useChallenges.js     → toute la logique de données du challenge
     useDailyReminder.js  → notifications locales
-  components/            → BreathRing, DayCard, NavBar, StreakBadge
-  pages/                 → Dashboard, Session, Calendar, Stats, Favorites, Settings, Login
+  components/            → BreathRing, DayCard, NavBar, StreakBadge,
+                           EquipmentCard, HoldTimer, Toast, ErrorBoundary
+  pages/                 → Today, Challenges, ChallengePlanning, Session,
+                           SessionPlaylist, Calendar, Stats, Favorites,
+                           Settings, Login
 supabase/
   schema.sql             → tables + row level security
   seed.sql                → import de tes séances déjà remplies

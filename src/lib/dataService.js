@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { CHALLENGES, EXERCISES } from '../data/seedData'
+import { todayKey } from './dateKey'
 
 const LS_PROGRESS = 'demo_progress' // [{ exercise_id, date_completed }]
 const LS_FAVORITES = 'demo_favorites' // [exercise_id]
@@ -71,7 +72,7 @@ export async function getProgress(userId) {
 }
 
 export async function setExerciseCompleted(userId, exerciseId, completed) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayKey()
 
   if (!isSupabaseConfigured) {
     const current = readLS(LS_PROGRESS, [])

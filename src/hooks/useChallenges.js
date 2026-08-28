@@ -9,7 +9,8 @@ import {
   getActiveChallenges,
   setChallengeActive,
 } from '../lib/dataService'
-import { computeStreak } from '../lib/streak'
+import { computeStreak, computeBestStreak } from '../lib/streak'
+import { todayKey } from '../lib/dateKey'
 
 export function useChallenges(userId) {
   const [challenges, setChallenges] = useState([])
@@ -138,7 +139,7 @@ export function useChallenges(userId) {
   // séance du jour suivant — l'utilisateur voit sa séance du jour terminée.
   const getNextDayGroup = useCallback(
     (challengeId) => {
-      const today = new Date().toISOString().slice(0, 10)
+      const today = todayKey()
       const weeks = getChallengeWeeks(challengeId)
       let fallback = null
       let finishedTodayGroup = null
@@ -200,6 +201,7 @@ export function useChallenges(userId) {
   // Streak global : jours consécutifs avec au moins une séance faite, tous
   // challenges confondus.
   const streak = useMemo(() => computeStreak(progress), [progress])
+  const bestStreak = useMemo(() => computeBestStreak(progress), [progress])
 
   const globalStats = useMemo(() => {
     const totalExercises = exercises.length
@@ -253,6 +255,7 @@ export function useChallenges(userId) {
     favoriteIds,
     activeChallengeIds: effectiveActiveIds,
     streak,
+    bestStreak,
     globalStats,
     loading,
     error,

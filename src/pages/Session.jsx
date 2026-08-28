@@ -1,15 +1,33 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import HoldTimer from '../components/HoldTimer'
+import { useToast } from '../components/toastContext'
 
 export default function Session({ data }) {
   const { exerciseId } = useParams()
   const navigate = useNavigate()
-  const { findExercise, findChallenge, completedIds, favoriteIds, toggleComplete, toggleFavorite } =
-    data
+  const showToast = useToast()
+  const {
+    findExercise,
+    findChallenge,
+    getChallengeExercises,
+    completedIds,
+    favoriteIds,
+    toggleComplete,
+    toggleFavorite,
+  } = data
 
   const ex = findExercise(exerciseId)
   if (!ex) return <div className="page">Séance introuvable.</div>
 
   const challenge = findChallenge(ex.challenge_id)
+
+  // Séances du même jour, dans l'ordre, pour la navigation précédent/suivant.
+  const sameDay = getChallengeExercises(ex.challenge_id).filter(
+    (e) => e.semaine === ex.semaine && e.jour === ex.jour
+  )
+  const pos = sameDay.findIndex((e) => e.id === ex.id)
+  const prev = pos > 0 ? sameDay[pos - 1] : null
+  const next = pos >= 0 && pos < sameDay.length - 1 ? sameDay[pos + 1] : null
 
   const done = completedIds.has(ex.id)
   const fav = favoriteIds.has(ex.id)
@@ -17,6 +35,17 @@ export default function Session({ data }) {
     .split(',')
     .map((m) => m.trim())
     .filter(Boolean)
+
+  const handleToggleDone = () => {
+    const nextDone = !done
+    toggleComplete(ex.id, nextDone)
+    if (nextDone) {
+      showToast('Séance validée', {
+        actionLabel: 'Annuler',
+        onAction: () => toggleComplete(ex.id, false),
+      })
+    }
+  }
 
   return (
     <div className="page session-page">
@@ -26,7 +55,7 @@ export default function Session({ data }) {
 
       <div className="video-wrap">
         <iframe
-          src={`https://www.youtube.com/embed/${ex.video_id}`}
+          src={`https://www.youtube-nocookie.com/embed/${ex.video_id}`}
           title={ex.titre}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -37,6 +66,7 @@ export default function Session({ data }) {
       <div className="session-meta">
         <span className="eyebrow">
           {challenge?.nom ?? ''} · Semaine {ex.semaine} · Jour {ex.jour}
+          {sameDay.length > 1 ? ` · ${pos + 1}/${sameDay.length}` : ''}
         </span>
         <h1 style={{ fontSize: 22, marginTop: 4 }}>{ex.titre}</h1>
 
@@ -59,11 +89,7 @@ export default function Session({ data }) {
       </div>
 
       <div className="session-actions">
-        <button
-          className="btn btn-primary"
-          style={{ flex: 1 }}
-          onClick={() => toggleComplete(ex.id, !done)}
-        >
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleToggleDone}>
           {done ? '✓ Séance faite' : 'Marquer comme fait'}
         </button>
         <button
@@ -76,14 +102,39 @@ export default function Session({ data }) {
         </button>
       </div>
 
+      <HoldTimer />
+
+      {(prev || next) && (
+        <div className="session-nav">
+          {prev ? (
+            <Link to={`/session/${prev.id}`} className="session-nav-link">
+              ← {prev.titre}
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link to={`/session/${next.id}`} className="session-nav-link right">
+              {next.titre} →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </div>
+      )}
+
       <style>{`
-        .back-btn { border: none; background: none; padding: 4px 0 14px; font-weight: 600; color: var(--color-primary-dark); font-size: 14px; }
-        .video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius-m); overflow: hidden; background: #000; }
-        .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
         .session-meta { margin-top: 18px; }
         .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
         .session-text { margin-top: 16px; font-size: 14px; line-height: 1.6; color: var(--color-ink-soft); white-space: pre-line; }
         .session-actions { display: flex; gap: 10px; margin-top: 22px; }
+        .session-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; }
+        .session-nav-link {
+          font-size: 12px; font-weight: 600; color: var(--color-primary-dark);
+          text-decoration: none; max-width: 46%;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .session-nav-link.right { text-align: right; }
       `}</style>
     </div>
   )

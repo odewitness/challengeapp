@@ -34,6 +34,33 @@ export function useAuth() {
     if (error) setError(error.message)
   }, [])
 
+  const sendMagicLink = useCallback(async (email) => {
+    if (!isSupabaseConfigured) return { ok: false }
+    setError(null)
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    })
+    if (error) {
+      setError(error.message)
+      return { ok: false }
+    }
+    return { ok: true }
+  }, [])
+
+  const resetPassword = useCallback(async (email) => {
+    if (!isSupabaseConfigured) return { ok: false }
+    setError(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    })
+    if (error) {
+      setError(error.message)
+      return { ok: false }
+    }
+    return { ok: true }
+  }, [])
+
   const signOut = useCallback(async () => {
     if (!isSupabaseConfigured) return
     await supabase.auth.signOut()
@@ -46,6 +73,8 @@ export function useAuth() {
     isDemo: !isSupabaseConfigured,
     signInWithPassword,
     signUp,
+    sendMagicLink,
+    resetPassword,
     signOut,
   }
 }
