@@ -175,6 +175,28 @@ export function useChallenges(userId) {
     [getChallengeWeeks, completedDates]
   )
 
+  // Renvoie les prochains "jours" (groupes d'exercices) d'un challenge, dans
+  // l'ordre, en commençant par le jour courant (celui de getNextDayGroup).
+  // Sert notamment à lister le matériel à prévoir pour les séances à venir.
+  const getUpcomingDayGroups = useCallback(
+    (challengeId, count) => {
+      const current = getNextDayGroup(challengeId)
+      if (!current) return []
+      const flat = []
+      for (const week of getChallengeWeeks(challengeId)) {
+        for (const day of week.jours) {
+          flat.push({ semaine: week.semaine, jour: day.jour, exercises: day.exercises })
+        }
+      }
+      const idx = flat.findIndex(
+        (g) => g.semaine === current.semaine && g.jour === current.jour
+      )
+      const start = idx < 0 ? 0 : idx
+      return flat.slice(start, start + count)
+    },
+    [getNextDayGroup, getChallengeWeeks]
+  )
+
   // Streak global : jours consécutifs avec au moins une séance faite, tous
   // challenges confondus.
   const streak = useMemo(() => computeStreak(progress), [progress])
@@ -238,6 +260,7 @@ export function useChallenges(userId) {
     getChallengeWeeks,
     getChallengeStats,
     getNextDayGroup,
+    getUpcomingDayGroups,
     findExercise,
     findChallenge,
     toggleComplete,

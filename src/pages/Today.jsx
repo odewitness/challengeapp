@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import StreakBadge from '../components/StreakBadge'
 import DayCard from '../components/DayCard'
+import EquipmentCard from '../components/EquipmentCard'
 
 export default function Today({ data }) {
   const { challenges, activeChallengeIds, streak, completedIds, getNextDayGroup, loading, error } =
@@ -33,7 +34,9 @@ export default function Today({ data }) {
           </Link>
         </div>
       ) : (
-        activeChallenges.map((challenge) => {
+        <>
+        <EquipmentCard activeChallenges={activeChallenges} data={data} />
+        {activeChallenges.map((challenge) => {
           const nextDay = getNextDayGroup(challenge.id)
           return (
             <section key={challenge.id} style={{ marginBottom: 22 }}>
@@ -51,7 +54,8 @@ export default function Today({ data }) {
               )}
             </section>
           )
-        })
+        })}
+        </>
       )}
 
       <style>{`
