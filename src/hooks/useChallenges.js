@@ -52,6 +52,10 @@ export function useChallenges(userId) {
   }, [userId])
 
   const completedIds = useMemo(() => new Set(progress.map((p) => p.exercise_id)), [progress])
+  const completedDates = useMemo(
+    () => new Map(progress.map((p) => [p.exercise_id, p.date_completed])),
+    [progress]
+  )
   const favoriteIds = useMemo(() => new Set(favorites), [favorites])
 
   // Si l'utilisateur n'a encore explicitement "suivi" aucun challenge (cas des
@@ -122,21 +126,36 @@ export function useChallenges(userId) {
     [getChallengeExercises, completedIds]
   )
 
-  // Le prochain "jour" (groupe d'exercices) non entièrement complété, dans
-  // l'ordre du challenge. C'est ce qui s'affiche sur la page "Aujourd'hui".
+  // Le prochain "jour" (groupe d'exercices) à proposer sur la page
+  // "Aujourd'hui" : le premier jour non entièrement complété, dans l'ordre du
+  // challenge — sauf si ce jour a été entamé (au moins une vidéo faite) un
+  // jour calendaire précédent sans être terminé, auquel cas on considère
+  // qu'il est "raté" et on passe au jour suivant (les vidéos manquantes
+  // restent accessibles depuis le planning complet).
   const getNextDayGroup = useCallback(
     (challengeId) => {
+      const today = new Date().toISOString().slice(0, 10)
       const weeks = getChallengeWeeks(challengeId)
+      let fallback = null
       for (const week of weeks) {
         for (const day of week.jours) {
-          if (!day.done) {
-            return { semaine: week.semaine, jour: day.jour, exercises: day.exercises }
-          }
+          if (day.done) continue
+          const group = { semaine: week.semaine, jour: day.jour, exercises: day.exercises }
+          if (!fallback) fallback = group
+          const startedOnPreviousDay = day.exercises.some((ex) => {
+            const date = completedDates.get(ex.id)
+            return date && date < today
+          })
+          if (startedOnPreviousDay) continue
+          return group
         }
       }
-      return null // challenge terminé
+      // Tous les jours restants ont été entamés un jour précédent sans être
+      // terminés (ex. challenge à l'arrêt) : on retombe sur le premier non
+      // terminé plutôt que de déclarer le challenge fini.
+      return fallback
     },
-    [getChallengeWeeks]
+    [getChallengeWeeks, completedDates]
   )
 
   // Streak global : jours consécutifs avec au moins une séance faite, tous
