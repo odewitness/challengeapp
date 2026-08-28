@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { parseVideoId } from '../lib/youtube'
+import { parseVideoRef, watchUrl, SOURCE_LABEL } from '../lib/video'
 import { useToast } from '../components/toastContext'
 
 const EMPTY_SESSION = {
@@ -170,7 +170,7 @@ function ExistingChallenge({
       semaine: ex.semaine,
       jour: ex.jour,
       titre: ex.titre ?? '',
-      videoInput: ex.video_id ?? '',
+      videoInput: watchUrl({ source: ex.source ?? 'youtube', video_id: ex.video_id ?? '' }),
       duree_min: ex.duree_min ?? '',
       categorie: ex.categorie ?? '',
       materiel: ex.materiel ?? '',
@@ -189,9 +189,9 @@ function ExistingChallenge({
   const submitSession = async (e) => {
     e.preventDefault()
     if (savingSession) return
-    const video_id = parseVideoId(form.videoInput)
+    const ref = parseVideoRef(form.videoInput)
     if (!form.titre.trim()) return setFormError('Le titre est obligatoire.')
-    if (!video_id) return setFormError('Lien ou ID YouTube non reconnu.')
+    if (!ref) return setFormError('Lien non reconnu (YouTube ou Instagram).')
 
     setSavingSession(true)
     try {
@@ -200,7 +200,8 @@ function ExistingChallenge({
         semaine: Number(form.semaine) || 1,
         jour: Number(form.jour) || 1,
         titre: form.titre.trim(),
-        video_id,
+        video_id: ref.video_id,
+        source: ref.source,
         duree_min: form.duree_min === '' ? null : Number(form.duree_min),
         categorie: form.categorie.trim(),
         materiel: form.materiel.trim(),
@@ -316,6 +317,7 @@ function ExistingChallenge({
                           <span className="editor-row-meta">
                             {ex.duree_min ? `${ex.duree_min} min` : 'durée ?'}
                             {ex.categorie ? ` · ${ex.categorie}` : ''}
+                            {ex.source === 'instagram' ? ' · Instagram' : ''}
                           </span>
                         </div>
                         <div className="editor-row-actions">
@@ -361,7 +363,7 @@ function ExistingChallenge({
 
 function SessionForm({ form, setForm, onSubmit, onCancel, error, busy, title }) {
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
-  const parsedId = parseVideoId(form.videoInput)
+  const parsed = parseVideoRef(form.videoInput)
 
   return (
     <form onSubmit={onSubmit} className="card editor-form">
@@ -377,12 +379,19 @@ function SessionForm({ form, setForm, onSubmit, onCancel, error, busy, title }) 
       <Field label="Titre">
         <input value={form.titre} onChange={set('titre')} required />
       </Field>
-      <Field label="Lien ou ID YouTube">
-        <input value={form.videoInput} onChange={set('videoInput')} placeholder="https://youtu.be/…" required />
+      <Field label="Lien vidéo (YouTube ou Instagram) ou ID YouTube">
+        <input
+          value={form.videoInput}
+          onChange={set('videoInput')}
+          placeholder="https://youtu.be/… ou https://www.instagram.com/reel/…"
+          required
+        />
       </Field>
       {form.videoInput.trim() !== '' && (
-        <p className={`editor-hint${parsedId ? '' : ' bad'}`}>
-          {parsedId ? `Vidéo reconnue : ${parsedId}` : 'Lien non reconnu'}
+        <p className={`editor-hint${parsed ? '' : ' bad'}`}>
+          {parsed
+            ? `${SOURCE_LABEL[parsed.source]} reconnu : ${parsed.video_id}`
+            : 'Lien non reconnu'}
         </p>
       )}
       <div className="editor-form-grid">

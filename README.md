@@ -92,10 +92,17 @@ nothing` évitent les doublons).
 ## 6. Créer / modifier un challenge dans l'app
 
 Depuis l'écran **Challenges → « + Créer un challenge »**. Tu peux ensuite
-ajouter des séances (semaine, jour, lien ou ID YouTube, durée, matériel,
-consigne), les réordonner et les modifier. Le bouton **Éditer** n'apparaît
-que sur tes propres challenges : ceux livrés avec l'app (Marathon 4, etc.)
-restent en lecture seule.
+ajouter des séances (semaine, jour, lien vidéo, durée, matériel, consigne),
+les réordonner et les modifier. Le bouton **Éditer** n'apparaît que sur tes
+propres challenges : ceux livrés avec l'app (Marathon 4, etc.) restent en
+lecture seule.
+
+Le champ vidéo accepte une URL **YouTube** (`youtu.be/…`, `watch?v=…`,
+`/embed/…`, `/shorts/…`) ou un ID brut, ainsi qu'une URL **Instagram**
+(`instagram.com/reel/…` ou `/p/…`, contenu public uniquement). Limite
+Instagram : l'embed n'expose pas d'événement de fin de vidéo, donc dans
+« Tout enchaîner » une séance Instagram se termine par un bouton
+« Marquer et passer à la suivante » — le reste du jour reste automatique.
 
 - **Mode démo** : tout est stocké dans le `localStorage` du navigateur.
 - **Mode Supabase** : exécute une fois `supabase/migration_challenge_editor.sql`
@@ -121,13 +128,14 @@ src/
     streak.js            → série en cours + meilleure série
     dateKey.js           → clé de date basée sur l'heure locale (pas UTC)
     theme.js             → préférence clair / sombre / auto
-    youtube.js           → extraction de l'ID vidéo depuis une URL
+    video.js             → reconnaît une URL YouTube / Instagram, URL d'embed
   hooks/
     useAuth.js           → connexion mot de passe / lien magique / reset
     useChallenges.js     → données + création / édition des challenges
     useDailyReminder.js  → notifications locales
   components/            → BreathRing, DayCard, NavBar, StreakBadge,
-                           EquipmentCard, HoldTimer, Toast, ErrorBoundary
+                           EquipmentCard, HoldTimer, Toast, ErrorBoundary,
+                           VideoEmbed
   pages/                 → Today, Challenges, ChallengePlanning,
                            ChallengeEditor, Session, SessionPlaylist,
                            Calendar, Stats, Favorites, Settings, Login
@@ -139,6 +147,8 @@ supabase/
 
 ## À propos des vidéos
 
-Les vidéos restent hébergées et diffusées par YouTube (lecteur `iframe`
-standard) — l'app ne fait que les référencer par leur ID, comme le
-ferait n'importe quel site qui embarque une vidéo YouTube.
+Les vidéos restent hébergées et diffusées par YouTube ou Instagram
+(lecteur `iframe` standard) — l'app ne fait que les référencer par leur
+ID / code, comme n'importe quel site qui embarque une vidéo. YouTube passe
+par `youtube-nocookie.com` ; Instagram par l'embed public
+`instagram.com/p/<code>/embed/`.

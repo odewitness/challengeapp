@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useToast } from '../components/toastContext'
+import VideoEmbed from '../components/VideoEmbed'
 
 // Charge (une seule fois) le script de l'API IFrame YouTube et signale quand
 // window.YT.Player est disponible.
@@ -36,7 +37,6 @@ export default function SessionPlaylist({ data }) {
 
   const apiReady = useYouTubeApi()
   const mountRef = useRef(null)
-  const playerRef = useRef(null)
 
   const challenge = findChallenge(challengeId)
   const weeks = getChallengeWeeks(challengeId)
@@ -48,70 +48,56 @@ export default function SessionPlaylist({ data }) {
   const [index, setIndex] = useState(0)
   const [finished, setFinished] = useState(false)
 
-  // Refs pour que le callback onStateChange (créé une fois) lise toujours la
-  // valeur courante.
-  const indexRef = useRef(0)
-  const exercisesRef = useRef(exercises)
-  const completeRef = useRef(null)
-  indexRef.current = index
-  exercisesRef.current = exercises
-  completeRef.current = (id) => {
-    if (!completedIds.has(id)) toggleComplete(id, true)
-  }
+  const current = exercises[index]
+  const currentIsInstagram = current?.source === 'instagram'
+  // Vidéo YouTube à charger (null si la séance courante est Instagram ou si on
+  // a terminé) : sert de clé au (re)montage du lecteur.
+  const currentYtId = !finished && current && !currentIsInstagram ? current.video_id : null
 
-  const goTo = (i) => {
-    const list = exercisesRef.current
-    if (i < 0 || i >= list.length) return
-    setFinished(false)
-    setIndex(i)
-    if (playerRef.current) playerRef.current.loadVideoById(list[i].video_id)
-  }
-
-  const handleEnded = () => {
-    const list = exercisesRef.current
-    const current = list[indexRef.current]
-    if (current) completeRef.current(current.id)
-    const next = indexRef.current + 1
-    if (next < list.length) {
-      setIndex(next)
-      if (playerRef.current) playerRef.current.loadVideoById(list[next].video_id)
+  const advance = () => {
+    if (current && !completedIds.has(current.id)) toggleComplete(current.id, true)
+    if (index + 1 < exercises.length) {
+      setIndex(index + 1)
     } else {
       setFinished(true)
     }
   }
 
-  const firstVideoId = exercises[0]?.video_id
+  const goTo = (i) => {
+    if (i < 0 || i >= exercises.length) return
+    setFinished(false)
+    setIndex(i)
+  }
 
+  // Le lecteur YouTube est recréé à chaque séance YouTube (la nav interne ne
+  // passe plus par loadVideoById pour gérer proprement les séances Instagram
+  // intercalées). Les séances Instagram n'exposent aucun événement de fin :
+  // l'utilisateur avance manuellement.
   useEffect(() => {
-    if (!apiReady || !mountRef.current || !firstVideoId) return
+    if (!apiReady || !mountRef.current || !currentYtId) return
     const player = new window.YT.Player(mountRef.current, {
-      videoId: firstVideoId,
+      videoId: currentYtId,
       host: 'https://www.youtube-nocookie.com',
       playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
       events: {
         onReady: (e) => e.target.playVideo(),
         onStateChange: (e) => {
-          if (e.data === window.YT.PlayerState.ENDED) handleEnded()
+          if (e.data === window.YT.PlayerState.ENDED) advance()
         },
       },
     })
-    playerRef.current = player
-    return () => {
-      player.destroy()
-      playerRef.current = null
-    }
-    // On ne (re)crée le player que lorsque l'API devient prête ou que la
-    // première vidéo du jour change ; la navigation interne passe par
-    // loadVideoById.
+    return () => player.destroy()
+    // `index` garde le callback `advance` à jour ; `currentYtId` gère le
+    // changement de vidéo et le passage depuis/vers une séance Instagram.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiReady, firstVideoId])
+  }, [apiReady, currentYtId, index])
 
   if (loading) return <div className="page">Chargement…</div>
   if (!challenge) return <div className="page">Challenge introuvable.</div>
   if (!exercises.length) return <div className="page">Aucune séance pour ce jour.</div>
 
-  const current = exercises[index]
   const remaining = exercises.filter((e) => !completedIds.has(e.id))
+  const isLast = index + 1 >= exercises.length
 
   const markCurrentDone = () => {
     if (current && !completedIds.has(current.id)) {
@@ -125,7 +111,9 @@ export default function SessionPlaylist({ data }) {
 
   const markAllDone = () => {
     remaining.forEach((e) => toggleComplete(e.id, true))
-    showToast(`${remaining.length} séance${remaining.length > 1 ? 's' : ''} validée${remaining.length > 1 ? 's' : ''}`)
+    showToast(
+      `${remaining.length} séance${remaining.length > 1 ? 's' : ''} validée${remaining.length > 1 ? 's' : ''}`
+    )
   }
 
   return (
@@ -134,16 +122,27 @@ export default function SessionPlaylist({ data }) {
         ← Retour
       </button>
 
-      <div className="video-wrap">
-        <div ref={mountRef} />
-      </div>
+      {finished ? (
+        <div className="card done-card">🎉 Toutes les séances du jour sont terminées</div>
+      ) : currentIsInstagram ? (
+        <>
+          <VideoEmbed source="instagram" videoId={current.video_id} title={current.titre} />
+          <button className="btn btn-primary ig-advance" onClick={advance}>
+            {isLast ? 'Marquer et terminer' : 'Marquer et passer à la suivante →'}
+          </button>
+        </>
+      ) : (
+        <div className="video-wrap" key={`yt-${index}`}>
+          <div ref={mountRef} />
+        </div>
+      )}
 
       <div className="session-meta">
         <span className="eyebrow">
-          {challenge.nom} · Semaine {semaine} · Jour {jour} · Lecture automatique
+          {challenge.nom} · Semaine {semaine} · Jour {jour} · Enchaînement
         </span>
         <h1 style={{ fontSize: 22, marginTop: 4 }}>
-          {finished ? '🎉 Toutes les séances du jour sont terminées' : current.titre}
+          {finished ? 'Séances du jour terminées' : current.titre}
         </h1>
         <p className="playlist-progress">
           {finished ? `${exercises.length} / ${exercises.length}` : `${index + 1} / ${exercises.length}`} séance
@@ -177,7 +176,10 @@ export default function SessionPlaylist({ data }) {
                 <span className="playlist-num" aria-hidden="true">
                   {done ? '✓' : i + 1}
                 </span>
-                <span className="playlist-title">{ex.titre}</span>
+                <span className="playlist-title">
+                  {ex.titre}
+                  {ex.source === 'instagram' ? ' · Instagram' : ''}
+                </span>
                 <span className="playlist-time">{ex.duree_min ? `${ex.duree_min} min` : ''}</span>
               </button>
             </li>
@@ -186,6 +188,8 @@ export default function SessionPlaylist({ data }) {
       </ol>
 
       <style>{`
+        .done-card { padding: 24px; text-align: center; font-weight: 600; color: var(--color-primary-dark); }
+        .ig-advance { width: 100%; margin-top: 12px; }
         .session-meta { margin-top: 18px; }
         .playlist-progress { margin-top: 6px; font-family: var(--font-mono); font-size: 12px; color: var(--color-ink-faint); }
         .playlist-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }

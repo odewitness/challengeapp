@@ -20,6 +20,7 @@ create table if not exists exercises (
   ordre int not null,
   titre text not null,
   video_id text not null,
+  source text not null default 'youtube', -- 'youtube' | 'instagram'
   duree_min int,
   categorie text,
   materiel text,

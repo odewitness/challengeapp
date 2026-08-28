@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import HoldTimer from '../components/HoldTimer'
 import { useToast } from '../components/toastContext'
+import VideoEmbed from '../components/VideoEmbed'
 
 export default function Session({ data }) {
   const { exerciseId } = useParams()
@@ -53,15 +54,7 @@ export default function Session({ data }) {
         ← Retour
       </button>
 
-      <div className="video-wrap">
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${ex.video_id}`}
-          title={ex.titre}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          loading="lazy"
-        />
-      </div>
+      <VideoEmbed source={ex.source} videoId={ex.video_id} title={ex.titre} />
 
       <div className="session-meta">
         <span className="eyebrow">

@@ -32,6 +32,7 @@ const EXERCISE_FIELDS = [
   'ordre',
   'titre',
   'video_id',
+  'source', // 'youtube' | 'instagram'
   'duree_min',
   'categorie',
   'materiel',
@@ -181,6 +182,7 @@ export async function saveExercise(userId, challengeId, exercise) {
   const fields = pickExerciseFields(exercise)
   fields.titre = (fields.titre || '').trim()
   fields.video_id = (fields.video_id || '').trim()
+  if (!fields.source) fields.source = 'youtube'
 
   if (!isSupabaseConfigured) {
     const list = readLS(LS_USER_EXERCISES, [])

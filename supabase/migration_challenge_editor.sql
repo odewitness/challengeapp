@@ -6,6 +6,9 @@
 alter table challenges add column if not exists owner_id uuid references auth.users(id) on delete cascade;
 alter table exercises  add column if not exists owner_id uuid references auth.users(id) on delete cascade;
 
+-- 1 bis. Source de la vidéo ('youtube' par défaut, 'instagram' possible)
+alter table exercises add column if not exists source text not null default 'youtube';
+
 -- 2. Lecture : contenu de l'app (owner_id NULL) + le sien
 drop policy if exists "Lecture challenges pour tous les connectés" on challenges;
 drop policy if exists "Lecture challenges (app + les miens)" on challenges;
