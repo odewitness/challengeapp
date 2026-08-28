@@ -29,11 +29,17 @@
   color-scheme: light;
 }
 
-/* Thème sombre : suit le réglage système. Les rôles des tokens sont
-   identiques, seules les valeurs changent — `--color-primary-dark` reste le
-   ton utilisé pour le texte d'accent et doit donc être clair ici. */
+/* Thème sombre. Les rôles des tokens sont identiques, seules les valeurs
+   changent — `--color-primary-dark` reste le ton utilisé pour le texte
+   d'accent et doit donc être clair ici.
+
+   Trois états possibles :
+   - `data-theme` absent  → suit le réglage système (media query)
+   - `data-theme="light"` → clair forcé (annule la media query)
+   - `data-theme="dark"`  → sombre forcé
+   Le bloc sombre est donc dupliqué : media query (mode auto) + attribut. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --color-bg: #141815;
     --color-bg-raised: #1e2420;
     --color-ink: #e8ede8;
@@ -52,6 +58,26 @@
 
     color-scheme: dark;
   }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #141815;
+  --color-bg-raised: #1e2420;
+  --color-ink: #e8ede8;
+  --color-ink-soft: #a9b8ac;
+  --color-ink-faint: #7c8c80;
+  --color-primary: #7fa389;
+  --color-primary-dark: #a9c9b3;
+  --color-primary-tint: #26302a;
+  --color-accent-rose: #cf9aa1;
+  --color-accent-rose-tint: #33272a;
+  --color-accent-gold: #e0b25a;
+  --color-line: #2c332e;
+  --color-danger: #e08a76;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
 }
 
 * {

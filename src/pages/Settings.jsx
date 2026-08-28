@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { getReminderSettings, saveReminderSettings } from '../hooks/useDailyReminder'
+import { useTheme } from '../lib/theme'
+
+const THEME_OPTIONS = [
+  { value: 'light', label: 'Clair' },
+  { value: 'dark', label: 'Sombre' },
+  { value: 'system', label: 'Auto' },
+]
 
 export default function SettingsPage({ auth }) {
+  const { preference, setPreference } = useTheme()
   const [settings, setSettings] = useState(getReminderSettings())
   const [permission, setPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
@@ -33,8 +41,28 @@ export default function SettingsPage({ auth }) {
   return (
     <div className="page">
       <span className="eyebrow">Réglages</span>
-      <h1 style={{ fontSize: 24, marginBottom: 16 }}>Rappel quotidien</h1>
+      <h1 style={{ fontSize: 24, marginBottom: 16 }}>Préférences</h1>
 
+      <h2 style={{ fontSize: 15, marginBottom: 8 }}>Apparence</h2>
+      <div className="card" style={{ padding: 18, marginBottom: 24 }}>
+        <div className="seg" role="group" aria-label="Thème de l'application">
+          {THEME_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              className={`seg-btn${preference === o.value ? ' active' : ''}`}
+              aria-pressed={preference === o.value}
+              onClick={() => setPreference(o.value)}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--color-ink-faint)', marginTop: 10 }}>
+          « Auto » suit le thème clair ou sombre de ton appareil.
+        </p>
+      </div>
+
+      <h2 style={{ fontSize: 15, marginBottom: 8 }}>Rappel quotidien</h2>
       <div className="card" style={{ padding: 18 }}>
         {permission === 'unsupported' && (
           <p style={{ fontSize: 13, color: 'var(--color-ink-faint)' }}>
@@ -91,6 +119,16 @@ export default function SettingsPage({ auth }) {
           Mode démo — données stockées uniquement sur cet appareil.
         </p>
       )}
+
+      <style>{`
+        .seg { display: flex; gap: 4px; background: var(--color-bg); border-radius: 999px; padding: 4px; }
+        .seg-btn {
+          flex: 1; border: none; background: none; border-radius: 999px;
+          padding: 8px 12px; font-size: 13px; font-weight: 600;
+          color: var(--color-ink-soft);
+        }
+        .seg-btn.active { background: var(--color-primary); color: #fff; }
+      `}</style>
     </div>
   )
 }

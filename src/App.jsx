@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useChallenges } from './hooks/useChallenges'
 import { useDailyReminder } from './hooks/useDailyReminder'
+import { useTheme } from './lib/theme'
 import NavBar from './components/NavBar'
 import Today from './pages/Today'
 import Challenges from './pages/Challenges'
@@ -38,9 +39,12 @@ function AuthedApp({ auth }) {
         <Link to="/" className="brand">
           Mon Challenge
         </Link>
-        <Link to="/settings" aria-label="Réglages" className="settings-link">
-          <GearIcon />
-        </Link>
+        <div className="top-bar-actions">
+          <ThemeToggle />
+          <Link to="/settings" aria-label="Réglages" className="settings-link">
+            <GearIcon />
+          </Link>
+        </div>
       </div>
 
       <Routes>
@@ -66,9 +70,50 @@ function AuthedApp({ auth }) {
           padding: 14px 20px 0;
         }
         .brand { font-family: var(--font-display); font-weight: 600; font-size: 15px; text-decoration: none; color: var(--color-primary-dark); }
+        .top-bar-actions { display: flex; align-items: center; gap: 6px; }
         .settings-link { color: var(--color-ink-faint); display: flex; }
+        .theme-toggle {
+          display: flex; align-items: center; justify-content: center;
+          width: 32px; height: 32px; padding: 0;
+          border: none; background: none; border-radius: 999px;
+          color: var(--color-ink-faint);
+        }
+        .theme-toggle:hover { background: var(--color-primary-tint); color: var(--color-primary-dark); }
       `}</style>
     </div>
+  )
+}
+
+function ThemeToggle() {
+  const { resolved, setPreference } = useTheme()
+  const nextIsDark = resolved !== 'dark'
+  return (
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={() => setPreference(nextIsDark ? 'dark' : 'light')}
+      aria-label={nextIsDark ? 'Passer en mode sombre' : 'Passer en mode clair'}
+      title={nextIsDark ? 'Mode sombre' : 'Mode clair'}
+    >
+      {resolved === 'dark' ? <SunIcon /> : <MoonIcon />}
+    </button>
+  )
+}
+
+function SunIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+    </svg>
   )
 }
 
