@@ -8,6 +8,12 @@ import {
   setFavorite,
   getActiveChallenges,
   setChallengeActive,
+  createChallenge as createChallengeApi,
+  updateChallenge as updateChallengeApi,
+  deleteChallenge as deleteChallengeApi,
+  saveExercise as saveExerciseApi,
+  deleteExercise as deleteExerciseApi,
+  moveExercise as moveExerciseApi,
 } from '../lib/dataService'
 import { computeStreak, computeBestStreak } from '../lib/streak'
 import { todayKey } from '../lib/dateKey'
@@ -247,6 +253,86 @@ export function useChallenges(userId) {
     [challenges]
   )
 
+  // Un challenge est modifiable s'il appartient à l'utilisateur courant
+  // (les challenges livrés avec l'app n'ont pas d'`owner_id`).
+  const canEditChallenge = useCallback(
+    (challengeId) => {
+      const ch = challenges.find((c) => c.id === challengeId)
+      return Boolean(ch && ch.owner_id && ch.owner_id === userId)
+    },
+    [challenges, userId]
+  )
+
+  // Rafraîchit uniquement le contenu (challenges + séances) après une édition,
+  // sans repasser par l'écran de chargement global.
+  const refetchContent = useCallback(async () => {
+    const [chs, ex] = await Promise.all([getChallenges(), getAllExercises()])
+    setChallenges(chs)
+    setExercises(ex)
+  }, [])
+
+  const createChallenge = useCallback(
+    async (fields) => {
+      const created = await createChallengeApi(userId, fields)
+      const next = await setChallengeActive(userId, created.id, true)
+      setActiveChallengeIds(next)
+      await refetchContent()
+      return created
+    },
+    [userId, refetchContent]
+  )
+
+  const updateChallenge = useCallback(
+    async (challengeId, patch) => {
+      await updateChallengeApi(userId, challengeId, patch)
+      await refetchContent()
+    },
+    [userId, refetchContent]
+  )
+
+  const deleteChallenge = useCallback(
+    async (challengeId) => {
+      await deleteChallengeApi(userId, challengeId)
+      const [prog, favs, active] = await Promise.all([
+        getProgress(userId),
+        getFavorites(userId),
+        getActiveChallenges(userId),
+      ])
+      setProgress(prog)
+      setFavorites(favs)
+      setActiveChallengeIds(active)
+      await refetchContent()
+    },
+    [userId, refetchContent]
+  )
+
+  const saveExercise = useCallback(
+    async (challengeId, exercise) => {
+      const saved = await saveExerciseApi(userId, challengeId, exercise)
+      await refetchContent()
+      return saved
+    },
+    [userId, refetchContent]
+  )
+
+  const deleteExercise = useCallback(
+    async (exerciseId) => {
+      await deleteExerciseApi(userId, exerciseId)
+      const prog = await getProgress(userId)
+      setProgress(prog)
+      await refetchContent()
+    },
+    [userId, refetchContent]
+  )
+
+  const moveExercise = useCallback(
+    async (challengeId, exerciseId, direction) => {
+      await moveExerciseApi(userId, challengeId, exerciseId, direction)
+      await refetchContent()
+    },
+    [userId, refetchContent]
+  )
+
   return {
     challenges,
     exercises,
@@ -266,8 +352,15 @@ export function useChallenges(userId) {
     getUpcomingDayGroups,
     findExercise,
     findChallenge,
+    canEditChallenge,
     toggleComplete,
     toggleFavorite,
     toggleChallengeActive,
+    createChallenge,
+    updateChallenge,
+    deleteChallenge,
+    saveExercise,
+    deleteExercise,
+    moveExercise,
   }
 }

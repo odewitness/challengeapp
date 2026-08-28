@@ -7,6 +7,7 @@ import NavBar from './components/NavBar'
 import Today from './pages/Today'
 import Challenges from './pages/Challenges'
 import ChallengePlanning from './pages/ChallengePlanning'
+import ChallengeEditor from './pages/ChallengeEditor'
 import Session from './pages/Session'
 import SessionPlaylist from './pages/SessionPlaylist'
 import CalendarPage from './pages/Calendar'
@@ -50,7 +51,9 @@ function AuthedApp({ auth }) {
       <Routes>
         <Route path="/" element={<Today data={data} />} />
         <Route path="/challenges" element={<Challenges data={data} />} />
+        <Route path="/challenges/new" element={<ChallengeEditor data={data} />} />
         <Route path="/challenges/:challengeId" element={<ChallengePlanning data={data} />} />
+        <Route path="/challenges/:challengeId/edit" element={<ChallengeEditor data={data} />} />
         <Route path="/session/:exerciseId" element={<Session data={data} />} />
         <Route
           path="/play/:challengeId/:semaine/:jour"

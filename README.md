@@ -89,14 +89,26 @@ je régénère `src/data/seedData.js` (mode démo) et `supabase/seed.sql`
 (mode Supabase — à réexécuter dans le SQL Editor, les `on conflict do
 nothing` évitent les doublons).
 
-## 6. Ajouter un deuxième challenge
+## 6. Créer / modifier un challenge dans l'app
 
-Crée un nouvel onglet dans le Google Sheet avec les mêmes colonnes, et
-ajoute une ligne dans l'onglet "Challenges" (id, nom, description,
-ordre_affichage). Le sélecteur de challenge est déjà prévu côté données
-(`useChallengeData`) ; si tu veux un sélecteur visible dans l'interface
-(actuellement l'app affiche le premier challenge par défaut), dis-le moi
-et je l'ajoute.
+Depuis l'écran **Challenges → « + Créer un challenge »**. Tu peux ensuite
+ajouter des séances (semaine, jour, lien ou ID YouTube, durée, matériel,
+consigne), les réordonner et les modifier. Le bouton **Éditer** n'apparaît
+que sur tes propres challenges : ceux livrés avec l'app (Marathon 4, etc.)
+restent en lecture seule.
+
+- **Mode démo** : tout est stocké dans le `localStorage` du navigateur.
+- **Mode Supabase** : exécute une fois `supabase/migration_challenge_editor.sql`
+  dans le SQL Editor (ajoute la colonne `owner_id` et les policies
+  d'écriture). Une nouvelle base créée avec `supabase/schema.sql` les a déjà.
+
+Les challenges créés dans l'app ne sont visibles que par leur auteur.
+
+### Import en masse (Google Sheet)
+
+Pour charger beaucoup de séances d'un coup, le passage par le Google Sheet
+reste possible : partage-le, je régénère `src/data/seedData.js` (démo) et
+`supabase/seed.sql` (Supabase, `on conflict do nothing` évite les doublons).
 
 ## Structure du projet
 
@@ -108,18 +120,21 @@ src/
     dataService.js       → lecture/écriture (Supabase ou localStorage)
     streak.js            → série en cours + meilleure série
     dateKey.js           → clé de date basée sur l'heure locale (pas UTC)
+    theme.js             → préférence clair / sombre / auto
+    youtube.js           → extraction de l'ID vidéo depuis une URL
   hooks/
     useAuth.js           → connexion mot de passe / lien magique / reset
-    useChallenges.js     → toute la logique de données du challenge
+    useChallenges.js     → données + création / édition des challenges
     useDailyReminder.js  → notifications locales
   components/            → BreathRing, DayCard, NavBar, StreakBadge,
                            EquipmentCard, HoldTimer, Toast, ErrorBoundary
-  pages/                 → Today, Challenges, ChallengePlanning, Session,
-                           SessionPlaylist, Calendar, Stats, Favorites,
-                           Settings, Login
+  pages/                 → Today, Challenges, ChallengePlanning,
+                           ChallengeEditor, Session, SessionPlaylist,
+                           Calendar, Stats, Favorites, Settings, Login
 supabase/
-  schema.sql             → tables + row level security
-  seed.sql                → import de tes séances déjà remplies
+  schema.sql                     → tables + row level security
+  migration_challenge_editor.sql → à exécuter sur une base existante
+  seed.sql                       → import de tes séances déjà remplies
 ```
 
 ## À propos des vidéos

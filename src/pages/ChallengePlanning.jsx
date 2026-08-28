@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import BreathRing from '../components/BreathRing'
 import DayCard from '../components/DayCard'
 
@@ -13,6 +13,7 @@ export default function ChallengePlanning({ data }) {
     completedIds,
     activeChallengeIds,
     toggleChallengeActive,
+    canEditChallenge,
     loading,
   } = data
   const [activeWeek, setActiveWeek] = useState(null)
@@ -42,14 +43,20 @@ export default function ChallengePlanning({ data }) {
         <div>
           <span className="eyebrow">Planning complet</span>
           <h1 style={{ fontSize: 26 }}>{challenge.nom}</h1>
-          <button
-            className="btn btn-ghost"
-            style={{ marginTop: 10 }}
-            aria-pressed={isActive}
-            onClick={() => toggleChallengeActive(challenge.id, !isActive)}
-          >
-            {isActive ? '✓ Suivi' : 'Suivre ce challenge'}
-          </button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+            <button
+              className="btn btn-ghost"
+              aria-pressed={isActive}
+              onClick={() => toggleChallengeActive(challenge.id, !isActive)}
+            >
+              {isActive ? '✓ Suivi' : 'Suivre ce challenge'}
+            </button>
+            {canEditChallenge(challenge.id) && (
+              <Link to={`/challenges/${challenge.id}/edit`} className="btn btn-ghost">
+                Modifier
+              </Link>
+            )}
+          </div>
         </div>
         <BreathRing pct={stats.pct} sublabel="complété" />
       </header>
