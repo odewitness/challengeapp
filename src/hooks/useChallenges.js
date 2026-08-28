@@ -132,24 +132,41 @@ export function useChallenges(userId) {
   // jour calendaire précédent sans être terminé, auquel cas on considère
   // qu'il est "raté" et on passe au jour suivant (les vidéos manquantes
   // restent accessibles depuis le planning complet).
+  //
+  // Exception : si le jour précédent a été entièrement bouclé aujourd'hui, on
+  // reste dessus jusqu'au lendemain plutôt que de pousser tout de suite la
+  // séance du jour suivant — l'utilisateur voit sa séance du jour terminée.
   const getNextDayGroup = useCallback(
     (challengeId) => {
       const today = new Date().toISOString().slice(0, 10)
       const weeks = getChallengeWeeks(challengeId)
       let fallback = null
+      let finishedTodayGroup = null
       for (const week of weeks) {
         for (const day of week.jours) {
-          if (day.done) continue
           const group = { semaine: week.semaine, jour: day.jour, exercises: day.exercises }
+          if (day.done) {
+            const finishedToday = day.exercises.every((ex) => {
+              const date = completedDates.get(ex.id)
+              return date && date >= today
+            })
+            finishedTodayGroup = finishedToday ? group : null
+            continue
+          }
           if (!fallback) fallback = group
           const startedOnPreviousDay = day.exercises.some((ex) => {
             const date = completedDates.get(ex.id)
             return date && date < today
           })
           if (startedOnPreviousDay) continue
+          // Le jour juste avant celui-ci a été terminé aujourd'hui : on y reste.
+          if (finishedTodayGroup) return finishedTodayGroup
           return group
         }
       }
+      // Plus aucun jour non terminé, mais le dernier a été bouclé aujourd'hui :
+      // on reste sur ce jour plutôt que d'afficher "challenge terminé".
+      if (finishedTodayGroup) return finishedTodayGroup
       // Tous les jours restants ont été entamés un jour précédent sans être
       // terminés (ex. challenge à l'arrêt) : on retombe sur le premier non
       // terminé plutôt que de déclarer le challenge fini.
