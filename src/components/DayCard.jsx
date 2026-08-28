@@ -18,6 +18,15 @@ export default function DayCard({ jour, exercises, completedIds }) {
         </div>
       </div>
 
+      {exercises.length > 1 && (
+        <Link
+          to={`/play/${exercises[0].challenge_id}/${exercises[0].semaine}/${jour}`}
+          className="day-card-playall"
+        >
+          ▶ Tout enchaîner
+        </Link>
+      )}
+
       <ul className="day-card-list">
         {exercises.map((ex) => {
           const done = completedIds.has(ex.id)
@@ -49,6 +58,20 @@ export default function DayCard({ jour, exercises, completedIds }) {
           text-align: center;
         }
         .day-check.done { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+        .day-card-playall {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin: 2px 0 8px;
+          padding: 7px 14px;
+          border-radius: 999px;
+          background: var(--color-primary-tint);
+          color: var(--color-primary-dark);
+          font-size: 12px;
+          font-weight: 600;
+          text-decoration: none;
+        }
+        .day-card-playall:hover { background: var(--color-primary); color: #fff; }
         .day-card-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
         .day-card-row {
           display: flex;

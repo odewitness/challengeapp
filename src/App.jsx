@@ -7,6 +7,7 @@ import Today from './pages/Today'
 import Challenges from './pages/Challenges'
 import ChallengePlanning from './pages/ChallengePlanning'
 import Session from './pages/Session'
+import SessionPlaylist from './pages/SessionPlaylist'
 import CalendarPage from './pages/Calendar'
 import StatsPage from './pages/Stats'
 import FavoritesPage from './pages/Favorites'
@@ -47,6 +48,10 @@ function AuthedApp({ auth }) {
         <Route path="/challenges" element={<Challenges data={data} />} />
         <Route path="/challenges/:challengeId" element={<ChallengePlanning data={data} />} />
         <Route path="/session/:exerciseId" element={<Session data={data} />} />
+        <Route
+          path="/play/:challengeId/:semaine/:jour"
+          element={<SessionPlaylist data={data} />}
+        />
         <Route path="/calendar" element={<CalendarPage data={data} />} />
         <Route path="/stats" element={<StatsPage data={data} />} />
         <Route path="/favoris" element={<FavoritesPage data={data} />} />
